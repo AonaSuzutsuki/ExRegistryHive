@@ -23,6 +23,37 @@ This project is that it load RegistryHive with C#.
 5. Click GetReg and show ProductName.  
 6. Click UnLoadHive.
 
+## Usage
+.`LoadHive(string hivename, string filename, ExRegistryKey rkey)`  
+Load RegistryHive from file.  
+*hivename* = When it load registryhive, it is imported with this name.  
+*filename* = Filepath of Registryhive.  
+*rkey* = It load Registryhive in this.  
+ -> ExRegistry.ExRegistryKey.HKEY_CLASSES_ROOT  
+ -> ExRegistry.ExRegistryKey.HKEY_CURRENT_USER  
+ -> ExRegistry.ExRegistryKey.HKEY_LOCAL_MACHINE  
+ -> ExRegistry.ExRegistryKey.HKEY_USERS  
+ -> ExRegistry.ExRegistryKey.HKEY_CURRENT_CONFIG  
+ 
+ .`UnLoadHive(string hivename, ExRegistryKey rkey)`  
+ *hivename* = It unload registryhive of this name. 
+ *rkey* = It unload Registryhive from this.  
+ -> ExRegistry.ExRegistryKey.HKEY_CLASSES_ROOT  
+ -> ExRegistry.ExRegistryKey.HKEY_CURRENT_USER  
+ -> ExRegistry.ExRegistryKey.HKEY_LOCAL_MACHINE  
+ -> ExRegistry.ExRegistryKey.HKEY_USERS  
+ -> ExRegistry.ExRegistryKey.HKEY_CURRENT_CONFIG  
+
+
+.Get a key from Registryhive  
+`
+RegistryKey baseKey = Registry.LocalMachine.OpenSubKey(hivename + "\\Microsoft\\Windows NT\\CurrentVersion");  
+Console.WriteLine("ProductName : " + baseKey.GetValue("ProductName"));  
+baseKey.Close();  
+`
+Keyname is "[hivename]\\[Keypath]".  
+This is about the same as the normal way.  
+
 ## Requirement
 1. Windows Vista SP2 or Windows 7 SP1 or later  
 2. .Net Framework 4.5.1  
