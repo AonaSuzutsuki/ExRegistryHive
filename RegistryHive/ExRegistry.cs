@@ -52,6 +52,13 @@ namespace ExRegistryHive
             HKEY_CURRENT_CONFIG = 0x80000005
         }
 
+        /// <summary>
+        /// Load RegistryHive from file.
+        /// </summary>
+        /// <param name="hivename">RegistryHive name</param>
+        /// <param name="filepath">RegistyHive filepath</param>
+        /// <param name="rkey">Registrykey</param>
+        /// <returns>When loading is failed, return false. When loading is succeeded, return true.</returns>
         public static bool LoadHive(string hivename, string filepath, ExRegistryKey rkey)
         {
             int tokenHandle = 0;
@@ -85,6 +92,12 @@ namespace ExRegistryHive
             }
         }
 
+        /// <summary>
+        /// Unload RegistryHive.
+        /// </summary>
+        /// <param name="hivename">RegistryHive name</param>
+        /// <param name="rkey">Registrykey</param>
+        /// <returns>When unloading is failed, return false. When unloading is succeeded, return true.</returns>
         public static bool UnloadHive(string hivename, ExRegistryKey rkey)
         {
             int rtn = RegUnLoadKey((uint)rkey, hivename + "\\");
