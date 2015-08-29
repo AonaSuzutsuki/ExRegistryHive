@@ -46,9 +46,9 @@ Load RegistryHive from file.
 
 
 .Get a key from Registryhive  
-`RegistryKey baseKey = Registry.LocalMachine.OpenSubKey(hivename + "\\Microsoft\\Windows NT\\CurrentVersion");  
-Console.WriteLine("ProductName : " + baseKey.GetValue("ProductName"));  
-baseKey.Close();`  
+`RegistryKey baseKey = Registry.LocalMachine.OpenSubKey(hivename + "\\Microsoft\\Windows NT\\CurrentVersion");`  
+`Console.WriteLine("ProductName : " + baseKey.GetValue("ProductName"));`  
+`baseKey.Close();`  
 Keyname is "[hivename]\\[Keypath]".  
 This is about the same as the normal way.  
 
