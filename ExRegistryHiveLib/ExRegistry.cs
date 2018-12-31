@@ -35,6 +35,13 @@ namespace ExRegistryHiveLib
         private struct TOKEN_PRIVILEGES
         {
             public UInt32 PrivilegeCount;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public LUID_AND_ATTRIBUTES[] Privileges;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LUID_AND_ATTRIBUTES
+        {
             public LUID Luid;
             public UInt32 Attributes;
         }
@@ -69,8 +76,14 @@ namespace ExRegistryHiveLib
             TOKEN_PRIVILEGES sebTokenp = new TOKEN_PRIVILEGES
             {
                 PrivilegeCount = 1,
-                Luid = sebLuid,
-                Attributes = SE_PRIVILEGE_ENABLED
+                Privileges = new LUID_AND_ATTRIBUTES[]
+                {
+                    new LUID_AND_ATTRIBUTES()
+                    {
+                        Luid = sebLuid,
+                        Attributes = SE_PRIVILEGE_ENABLED
+                    }
+                }
             };
             AdjustTokenPrivileges(tokenHandle, false, ref sebTokenp, 0, 0, 0);
 
@@ -79,8 +92,14 @@ namespace ExRegistryHiveLib
             TOKEN_PRIVILEGES serTokenp = new TOKEN_PRIVILEGES
             {
                 PrivilegeCount = 1,
-                Luid = serLuid,
-                Attributes = SE_PRIVILEGE_ENABLED
+                Privileges = new LUID_AND_ATTRIBUTES[]
+                {
+                    new LUID_AND_ATTRIBUTES()
+                    {
+                        Luid = serLuid,
+                        Attributes = SE_PRIVILEGE_ENABLED
+                    }
+                }
             };
             AdjustTokenPrivileges(tokenHandle, false, ref serTokenp, 0, 0, 0);
             CloseHandle(tokenHandle);
