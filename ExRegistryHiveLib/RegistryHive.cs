@@ -26,9 +26,45 @@ namespace ExRegistryHiveLib
 
     public interface ISubKey : IDisposable
     {
-        IntPtr Hkey { get; }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         void SetValue(string key, int value);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        void SetValue(string key, string value);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        int GetValue(string key);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        string GetStringValue(string key);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="valueName"></param>
+        void DeleteValue(string valueName);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="keyName"></param>
+        void DeleteKey(string keyName);
     }
 
     public class SubKey : ISubKey
@@ -43,7 +79,32 @@ namespace ExRegistryHiveLib
 
         public void SetValue(string key, int value)
         {
-            ExSetValue(key, value, Hkey, Microsoft.Win32.RegistryValueKind.DWord);
+            ExSetValue(key, value, Hkey);
+        }
+
+        public void SetValue(string key, string value)
+        {
+            ExSetValue(key, value, Hkey);
+        }
+
+        public int GetValue(string key)
+        {
+            return ExGetInt32Value(key, Hkey);
+        }
+
+        public string GetStringValue(string key)
+        {
+            return ExGetStringValue(key, Hkey);
+        }
+
+        public void DeleteValue(string valueName)
+        {
+            ExDeleteValue(valueName, Hkey);
+        }
+
+        public void DeleteKey(string keyName)
+        {
+            ExDeleteKey(keyName, Hkey);
         }
 
         public void Dispose()
@@ -72,7 +133,15 @@ namespace ExRegistryHiveLib
 
         public ISubKey OpenKey(string subKeyName)
         {
-            var ptr = ExOpenKey(targetKey, subKeyName);
+            var ptr = ExOpenSubKey(targetKey, subKeyName);
+            if (!ptr.Equals(IntPtr.Zero))
+                return new SubKey(ptr);
+            return null;
+        }
+
+        public ISubKey CreateKey(string subKeyName)
+        {
+            var ptr = ExCreateSubKey(targetKey, subKeyName);
             if (!ptr.Equals(IntPtr.Zero))
                 return new SubKey(ptr);
             return null;
