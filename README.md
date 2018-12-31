@@ -57,7 +57,7 @@ This is about the same as the normal way.
 2. .Net Framework 4.5.1  
 
 ## Licence
-Public Domain
+MIT Licence
 
 ## Author
 [AonaSuzutsuki](https://github.com/AonaSuzutsuki)
