@@ -104,37 +104,39 @@ namespace ExRegistryHiveLib
             IntPtr tokenHandle = IntPtr.Zero;
             if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, ref tokenHandle) == 0)
                 return false;
-            
-            LUID serLuid = new LUID();
-            if (LookupPrivilegeValue(null, "SeRestorePrivilege", ref serLuid) == 0)
-            {
-                CloseHandle(tokenHandle);
-                return false;
-            }
 
-            TOKEN_PRIVILEGES serTokenp = new TOKEN_PRIVILEGES
+            AdjustTokenPrivilege(tokenHandle, "SeBackupPrivilege");
+            AdjustTokenPrivilege(tokenHandle, "SeRestorePrivilege");
+
+            CloseHandle(tokenHandle);
+            return true;
+        }
+
+        private static bool AdjustTokenPrivilege(IntPtr tokenHandle, string lpname)
+        {
+            var serLuid = new LUID();
+            if (LookupPrivilegeValue(null, lpname, ref serLuid) == 0)
+                return false;
+
+            var serTokenp = new TOKEN_PRIVILEGES
             {
                 PrivilegeCount = 1,
                 Luid = serLuid,
                 Attributes = SE_PRIVILEGE_ENABLED
             };
             if (AdjustTokenPrivileges(tokenHandle, false, ref serTokenp, 0, IntPtr.Zero, 0) == 0)
-            {
-                CloseHandle(tokenHandle);
                 return false;
-            }
 
-            CloseHandle(tokenHandle);
             return true;
         }
 
         /// <summary>
-        /// 
+        /// Open registry sub  key.
         /// </summary>
-        /// <param name="rkey"></param>
-        /// <param name="subKeyName"></param>
-        /// <returns></returns>
-        public static IntPtr ExOpenKey(ExRegistryKey rkey, string subKeyName)
+        /// <param name="rkey">HKEY_LOCAL_MACHINE or HKEY_USERS.</param>
+        /// <param name="subKeyName">Sub key name.</param>
+        /// <returns>IntPtr of Sub key.</returns>
+        public static IntPtr ExOpenSubKey(ExRegistryKey rkey, string subKeyName)
         {
             var ptr = IntPtr.Zero;
             RegOpenKeyEx(new IntPtr((int)rkey), subKeyName, 0, KEY_ALL_ACCESS, ref ptr);
@@ -142,12 +144,12 @@ namespace ExRegistryHiveLib
         }
 
         /// <summary>
-        /// 
+        /// Create registry sub key.
         /// </summary>
-        /// <param name="rkey"></param>
-        /// <param name="subKeyName"></param>
-        /// <returns></returns>
-        public static IntPtr ExCreateKey(ExRegistryKey rkey, string subKeyName)
+        /// <param name="rkey">HKEY_LOCAL_MACHINE or HKEY_USERS.</param>
+        /// <param name="subKeyName">Sub key name.</param>
+        /// <returns>IntPtr of Sub key.</returns>
+        public static IntPtr ExCreateSubKey(ExRegistryKey rkey, string subKeyName)
         {
             int lpdwDisposition = 0; // REG_CREATED_NEW_KEY(0x00000001L)  REG_OPENED_EXISTING_KEY(0x00000002L)
             var ptr = IntPtr.Zero;
@@ -156,31 +158,30 @@ namespace ExRegistryHiveLib
         }
 
         /// <summary>
-        /// 
+        /// Set value into sub key.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="rkey"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static bool ExSetValue(string key, int value, IntPtr rkey)
+        /// <param name="subkey">Sub key name.</param>
+        /// <param name="value">Int32 value to be added.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>When setting value is failed, return false. When setting value is succeeded, return true.</returns>
+        public static bool ExSetValue(string subkey, int value, IntPtr rkey)
         {
             var size = Marshal.SizeOf(value.GetType());
             var pData = Marshal.AllocHGlobal(size);
             Marshal.WriteInt32(pData, value);
 
-            var rtn = RegSetValueEx(rkey, key, 0, (int)RegistryValueKind.DWord, pData, size);
+            var rtn = RegSetValueEx(rkey, subkey, 0, (int)RegistryValueKind.DWord, pData, size);
             Marshal.Release(pData);
             return rtn == 0;
         }
 
         /// <summary>
-        /// 
+        /// Set value into sub key.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="rkey"></param>
-        /// <returns></returns>
+        /// <param name="subkey">Sub key name.</param>
+        /// <param name="value">String value to be added.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>When setting value is failed, return false. When setting value is succeeded, return true.</returns>
         public static bool ExSetValue(string key, string value, IntPtr rkey)
         {
             var size = value.Length + 1;
@@ -192,17 +193,17 @@ namespace ExRegistryHiveLib
         }
 
         /// <summary>
-        /// 
+        /// Get int32 value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="rkey"></param>
-        /// <returns></returns>
-        public static int ExGetInt32Value(string key, IntPtr rkey)
+        /// <param name="valueName">Value name.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>Int32 value.</returns>
+        public static int ExGetInt32Value(string valueName, IntPtr rkey)
         {
             RegistryValueKind lpType = 0;
             var ptr = Marshal.AllocHGlobal(4);
             int size = 4;
-            RegQueryValueEx(rkey, key, 0, ref lpType, ptr, ref size);
+            RegQueryValueEx(rkey, valueName, 0, ref lpType, ptr, ref size);
 
             var rtn = Marshal.ReadInt32(ptr);
             Marshal.Release(ptr);
@@ -210,11 +211,11 @@ namespace ExRegistryHiveLib
         }
 
         /// <summary>
-        /// 
+        /// Get string value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="rkey"></param>
-        /// <returns></returns>
+        /// <param name="valueName">Value name.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>String value.</returns>
         public static string ExGetStringValue(string key, IntPtr rkey)
         {
             RegistryValueKind lpType = 0;
@@ -226,22 +227,22 @@ namespace ExRegistryHiveLib
         }
 
         /// <summary>
-        /// 
+        /// Delete value.
         /// </summary>
-        /// <param name="valueName"></param>
-        /// <param name="rkey"></param>
-        /// <returns></returns>
+        /// <param name="valueName">Value name.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>When deleting is failed, return false. When deleting is succeeded, return true.</returns>
         public static bool ExDeleteValue(string valueName, IntPtr rkey)
         {
             return RegDeleteValue(rkey, valueName) == 0;
         }
 
         /// <summary>
-        /// 
+        /// Delete sub key.
         /// </summary>
-        /// <param name="keyName"></param>
-        /// <param name="rkey"></param>
-        /// <returns></returns>
+        /// <param name="keyName">Sub key name.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
+        /// <returns>When deleting is failed, return false. When deleting is succeeded, return true.</returns>
         public static bool ExDeleteKey(string keyName, IntPtr rkey)
         {
             return RegDeleteKey(rkey, keyName) == 0;
@@ -250,18 +251,18 @@ namespace ExRegistryHiveLib
         /// <summary>
         /// Close registry key.
         /// </summary>
-        /// <param name="key">Key name.</param>
+        /// <param name="rkey">IntPtr of Sub key.</param>
         /// <returns>When closing is failed, return false. When is succeeded, return true.</returns>
-        public static bool ExCloseKey(IntPtr key)
+        public static bool ExCloseKey(IntPtr rkey)
         {
-            return RegCloseKey(key) == 0;
+            return RegCloseKey(rkey) == 0;
         }
 
         /// <summary>
         /// Unload RegistryHive.
         /// </summary>
         /// <param name="hivename">RegistryHive name</param>
-        /// <param name="rkey">Registrykey</param>
+        /// <param name="rkey">HKEY_LOCAL_MACHINE or HKEY_USERS.</param>
         /// <returns>When unloading is failed, return false. When is succeeded, return true.</returns>
         public static bool ExUnloadHive(string hivename, ExRegistryKey rkey)
         {

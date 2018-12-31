@@ -26,11 +26,44 @@ namespace ExRegistryHiveLib
 
     public interface ISubKey : IDisposable
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         void SetValue(string key, int value);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         void SetValue(string key, string value);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         int GetValue(string key);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         string GetStringValue(string key);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="valueName"></param>
         void DeleteValue(string valueName);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="keyName"></param>
         void DeleteKey(string keyName);
     }
 
@@ -100,7 +133,7 @@ namespace ExRegistryHiveLib
 
         public ISubKey OpenKey(string subKeyName)
         {
-            var ptr = ExOpenKey(targetKey, subKeyName);
+            var ptr = ExOpenSubKey(targetKey, subKeyName);
             if (!ptr.Equals(IntPtr.Zero))
                 return new SubKey(ptr);
             return null;
@@ -108,7 +141,7 @@ namespace ExRegistryHiveLib
 
         public ISubKey CreateKey(string subKeyName)
         {
-            var ptr = ExCreateKey(targetKey, subKeyName);
+            var ptr = ExCreateSubKey(targetKey, subKeyName);
             if (!ptr.Equals(IntPtr.Zero))
                 return new SubKey(ptr);
             return null;
