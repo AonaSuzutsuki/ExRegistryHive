@@ -4,13 +4,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ExRegistryHive
+namespace ExRegistryHiveLib
 {
-    class ExRegistry
+    public class ExRegistry
     {
-        [DllImport("advapi32.dll")]
+        [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
         private static extern int RegLoadKey(uint hKey, string lpSubKey, string lpFile);
-        [DllImport("advapi32.dll")]
+        [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
         private static extern int RegUnLoadKey(uint hKey, string lpSubKey);
         [DllImport("advapi32.dll")]
         private static extern int OpenProcessToken(int ProcessHandle, int DesiredAccess, ref int tokenhandle);
@@ -45,11 +45,11 @@ namespace ExRegistryHive
 
         public enum ExRegistryKey : uint
         {
-            HKEY_CLASSES_ROOT = 0x80000000,
-            HKEY_CURRENT_USER = 0x80000001,
+            //HKEY_CLASSES_ROOT = 0x80000000,
+            //HKEY_CURRENT_USER = 0x80000001,
             HKEY_LOCAL_MACHINE = 0x80000002,
             HKEY_USERS = 0x80000003,
-            HKEY_CURRENT_CONFIG = 0x80000005
+            //HKEY_CURRENT_CONFIG = 0x80000005
         }
 
         /// <summary>
@@ -62,34 +62,32 @@ namespace ExRegistryHive
         public static bool LoadHive(string hivename, string filepath, ExRegistryKey rkey)
         {
             int tokenHandle = 0;
-            LUID serLuid = new LUID();
-            LUID sebLuid = new LUID();
             OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref tokenHandle);
-            TOKEN_PRIVILEGES tokenp = new TOKEN_PRIVILEGES();
 
-
-            tokenp.PrivilegeCount = 1;
+            LUID sebLuid = new LUID();
             LookupPrivilegeValue(null, "SeBackupPrivilege", ref sebLuid);
-            tokenp.Luid = sebLuid;
-            tokenp.Attributes = SE_PRIVILEGE_ENABLED;
-            AdjustTokenPrivileges(tokenHandle, false, ref tokenp, 0, 0, 0);
+            TOKEN_PRIVILEGES sebTokenp = new TOKEN_PRIVILEGES
+            {
+                PrivilegeCount = 1,
+                Luid = sebLuid,
+                Attributes = SE_PRIVILEGE_ENABLED
+            };
+            AdjustTokenPrivileges(tokenHandle, false, ref sebTokenp, 0, 0, 0);
 
-            tokenp.PrivilegeCount = 1;
+            LUID serLuid = new LUID();
             LookupPrivilegeValue(null, "SeRestorePrivilege", ref serLuid);
-            tokenp.Luid = serLuid;
-            tokenp.Attributes = SE_PRIVILEGE_ENABLED;
-            AdjustTokenPrivileges(tokenHandle, false, ref tokenp, 0, 0, 0);
+            TOKEN_PRIVILEGES serTokenp = new TOKEN_PRIVILEGES
+            {
+                PrivilegeCount = 1,
+                Luid = serLuid,
+                Attributes = SE_PRIVILEGE_ENABLED
+            };
+            AdjustTokenPrivileges(tokenHandle, false, ref serTokenp, 0, 0, 0);
             CloseHandle(tokenHandle);
-            int rtn = RegLoadKey((uint)rkey, hivename + "\\", filepath);
 
-            if (rtn == 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            int rtn = RegLoadKey((uint)rkey, hivename, filepath);
+
+            return rtn == 0;
         }
 
         /// <summary>
@@ -100,16 +98,9 @@ namespace ExRegistryHive
         /// <returns>When unloading is failed, return false. When unloading is succeeded, return true.</returns>
         public static bool UnloadHive(string hivename, ExRegistryKey rkey)
         {
-            int rtn = RegUnLoadKey((uint)rkey, hivename + "\\");
+            int rtn = RegUnLoadKey((uint)rkey, hivename);
 
-            if (rtn == 0)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return rtn == 0;
         }
     }
 }
