@@ -147,10 +147,30 @@ namespace ExRegistryHiveLib
             return null;
         }
 
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (!ExUnloadHive(hiveName, targetKey))
+                    throw new FailedToUnLoadHiveException();
+
+                disposedValue = true;
+            }
+        }
+
+        ~RegistryHive()
+        {
+            Dispose(false);
+        }
+
         public void Dispose()
         {
-            if (!ExUnloadHive(hiveName, targetKey))
-                throw new FailedToUnLoadHiveException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+        #endregion
     }
 }
