@@ -17,36 +17,36 @@ namespace ExRegistryHiveLib
     internal class ExRegistry
     {
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegLoadKey(uint hKey, string lpSubKey, string lpFile);
+        private static extern int RegLoadKeyA(uint hKey, string lpSubKey, string lpFile);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegUnLoadKey(uint hKey, string lpSubKey);
+        private static extern int RegUnLoadKeyA(uint hKey, string lpSubKey);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, int dwType, IntPtr lpData, int cbData);
+        private static extern int RegSetValueExA(IntPtr hKey, string lpValueName, int reserved, int dwType, IntPtr lpData, int cbData);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, int lpReserved, ref RegistryValueKind lpType, IntPtr lpData, ref int lpcbData);
+        private static extern int RegQueryValueExA(IntPtr hKey, string lpValueName, int lpReserved, ref RegistryValueKind lpType, IntPtr lpData, ref int lpcbData);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, int lpReserved, ref RegistryValueKind lpType, StringBuilder lpData, ref int lpcbData);
+        private static extern int RegQueryValueExA(IntPtr hKey, string lpValueName, int lpReserved, ref RegistryValueKind lpType, StringBuilder lpData, ref int lpcbData);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegDeleteValue(IntPtr hKey, string lpValueName);
+        private static extern int RegDeleteValueA(IntPtr hKey, string lpValueName);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegDeleteKey(IntPtr hKey, string lpSubKey);
+        private static extern int RegDeleteKeyA(IntPtr hKey, string lpSubKey);
 
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegOpenKeyEx(IntPtr hKey, string lpSubKey, int ulOptions, int samDesired, ref IntPtr phkResult);
+        private static extern int RegOpenKeyExA(IntPtr hKey, string lpSubKey, int ulOptions, int samDesired, ref IntPtr phkResult);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int RegCreateKeyEx(IntPtr hKey, string lpSubKey, int Reserved, string lpClass, int dwOptions, int samDesired, IntPtr lpSecurityAttributes, ref IntPtr phkResult, ref int lpdwDisposition);
+        private static extern int RegCreateKeyExA(IntPtr hKey, string lpSubKey, int reserved, string lpClass, int dwOptions, int samDesired, IntPtr lpSecurityAttributes, ref IntPtr phkResult, ref int lpdwDisposition);
         [DllImport("advapi32.dll")]
         private static extern int RegCloseKey(IntPtr hKey);
 
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetCurrentProcess();
         [DllImport("advapi32.dll")]
-        private static extern int OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, ref IntPtr tokenhandle);
+        private static extern int OpenProcessToken(IntPtr processHandle, int desiredAccess, ref IntPtr tokenhandle);
         [DllImport("kernel32.dll")]
         private static extern bool CloseHandle(IntPtr handle);
         [DllImport("advapi32.dll", CharSet = CharSet.Ansi)]
-        private static extern int LookupPrivilegeValue(string lpsystemname, string lpname, [MarshalAs(UnmanagedType.Struct)] ref LUID lpLuid);
+        private static extern int LookupPrivilegeValueA(string lpsystemname, string lpname, [MarshalAs(UnmanagedType.Struct)] ref LUID lpLuid);
         [DllImport("advapi32.dll")]
         private static extern int AdjustTokenPrivileges(IntPtr tokenhandle, bool disableprivs, [MarshalAs(UnmanagedType.Struct)]ref TOKEN_PRIVILEGES Newstate, int bufferlength, IntPtr PreivousState, int Returnlength);
         
@@ -96,7 +96,7 @@ namespace ExRegistryHiveLib
             if (!EnabledPrivilege())
                 return false;
 
-            return RegLoadKey((uint)rkey, hivename, filepath) == 0;
+            return RegLoadKeyA((uint)rkey, hivename, filepath) == 0;
         }
 
         private static bool EnabledPrivilege()
@@ -115,7 +115,7 @@ namespace ExRegistryHiveLib
         private static bool AdjustTokenPrivilege(IntPtr tokenHandle, string lpname)
         {
             var serLuid = new LUID();
-            if (LookupPrivilegeValue(null, lpname, ref serLuid) == 0)
+            if (LookupPrivilegeValueA(null, lpname, ref serLuid) == 0)
                 return false;
 
             var serTokenp = new TOKEN_PRIVILEGES
@@ -139,7 +139,7 @@ namespace ExRegistryHiveLib
         public static IntPtr ExOpenSubKey(ExRegistryKey rkey, string subKeyName)
         {
             var ptr = IntPtr.Zero;
-            RegOpenKeyEx(new IntPtr((int)rkey), subKeyName, 0, KEY_ALL_ACCESS, ref ptr);
+            RegOpenKeyExA(new IntPtr((int)rkey), subKeyName, 0, KEY_ALL_ACCESS, ref ptr);
             return ptr;
         }
 
@@ -153,7 +153,7 @@ namespace ExRegistryHiveLib
         {
             int lpdwDisposition = 0; // REG_CREATED_NEW_KEY(0x00000001L)  REG_OPENED_EXISTING_KEY(0x00000002L)
             var ptr = IntPtr.Zero;
-            RegCreateKeyEx(new IntPtr((int)rkey), subKeyName, 0, null, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, IntPtr.Zero, ref ptr, ref lpdwDisposition);
+            RegCreateKeyExA(new IntPtr((int)rkey), subKeyName, 0, null, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, IntPtr.Zero, ref ptr, ref lpdwDisposition);
             return ptr;
         }
 
@@ -170,7 +170,7 @@ namespace ExRegistryHiveLib
             var pData = Marshal.AllocHGlobal(size);
             Marshal.WriteInt32(pData, value);
 
-            var rtn = RegSetValueEx(rkey, subkey, 0, (int)RegistryValueKind.DWord, pData, size);
+            var rtn = RegSetValueExA(rkey, subkey, 0, (int)RegistryValueKind.DWord, pData, size);
             Marshal.Release(pData);
             return rtn == 0;
         }
@@ -187,7 +187,7 @@ namespace ExRegistryHiveLib
             var size = value.Length + 1;
             var pData = Marshal.StringToHGlobalAnsi(value);
 
-            var rtn = RegSetValueEx(rkey, key, 0, (int)RegistryValueKind.String, pData, size);
+            var rtn = RegSetValueExA(rkey, key, 0, (int)RegistryValueKind.String, pData, size);
             Marshal.Release(pData);
             return rtn == 0;
         }
@@ -203,7 +203,7 @@ namespace ExRegistryHiveLib
             RegistryValueKind lpType = 0;
             var ptr = Marshal.AllocHGlobal(4);
             int size = 4;
-            RegQueryValueEx(rkey, valueName, 0, ref lpType, ptr, ref size);
+            RegQueryValueExA(rkey, valueName, 0, ref lpType, ptr, ref size);
 
             var rtn = Marshal.ReadInt32(ptr);
             Marshal.Release(ptr);
@@ -221,7 +221,7 @@ namespace ExRegistryHiveLib
             RegistryValueKind lpType = 0;
             var sb = new StringBuilder(1024);
             int size = 64;
-            RegQueryValueEx(rkey, key, 0, ref lpType, sb, ref size);
+            RegQueryValueExA(rkey, key, 0, ref lpType, sb, ref size);
             
             return sb.ToString();
         }
@@ -234,7 +234,7 @@ namespace ExRegistryHiveLib
         /// <returns>When deleting is failed, return false. When deleting is succeeded, return true.</returns>
         public static bool ExDeleteValue(string valueName, IntPtr rkey)
         {
-            return RegDeleteValue(rkey, valueName) == 0;
+            return RegDeleteValueA(rkey, valueName) == 0;
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace ExRegistryHiveLib
         /// <returns>When deleting is failed, return false. When deleting is succeeded, return true.</returns>
         public static bool ExDeleteKey(string keyName, IntPtr rkey)
         {
-            return RegDeleteKey(rkey, keyName) == 0;
+            return RegDeleteKeyA(rkey, keyName) == 0;
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace ExRegistryHiveLib
         /// <returns>When unloading is failed, return false. When is succeeded, return true.</returns>
         public static bool ExUnloadHive(string hivename, ExRegistryKey rkey)
         {
-            return RegUnLoadKey((uint)rkey, hivename) == 0;
+            return RegUnLoadKeyA((uint)rkey, hivename) == 0;
         }
     }
 }
