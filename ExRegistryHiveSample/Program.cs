@@ -12,45 +12,38 @@ namespace ExRegistryHiveSample
     {
         static void Main(string[] args)
         {
-            var hivename = "test_hive";
-            var subKeyName = string.Format("{0}\\{1}", hivename, "test_value");
-            var subKeyName2 = string.Format("{0}\\{1}", hivename, "test_value2");
+            const string hiveName = "test_hive";
+            var subKeyName = $"{hiveName}\\test_value";
+            var subKeyName2 = $"{hiveName}\\test_value2";
 
-            using (var registryHive = new ExRegistryHiveLib.RegistryHive("ex.hive", hivename, ExRegistryKey.HKEY_USERS))
+            using (var registryHive = new ExRegistryHiveLib.RegistryHive("ex.hive", hiveName, ExRegistryKey.HKEY_USERS))
             {
-                try
+                using (var exBaseKey = registryHive.OpenKey(subKeyName))
                 {
-                    using (var exBaseKey = registryHive.OpenKey(subKeyName))
-                    {
-                        exBaseKey.SetValue("test_int", 12);
-                        exBaseKey.SetValue("test_str", "test");
+                    exBaseKey.SetValue("test_int", 12);
+                    exBaseKey.SetValue("test_str", "test");
 
-                        Console.WriteLine(subKeyName);
-                        Console.WriteLine(" {0}: {1}", "test_dward", exBaseKey.GetValue("test_dward").ToString());
-                        Console.WriteLine(" {0}: {1}", "test_int", exBaseKey.GetValue("test_int").ToString());
-                        Console.WriteLine(" {0}: {1}", "test_str", exBaseKey.GetStringValue("test_str").ToString());
+                    Console.WriteLine(subKeyName);
+                    Console.WriteLine(" {0}: {1}", "test_dward", exBaseKey.GetValue("test_dward").ToString());
+                    Console.WriteLine(" {0}: {1}", "test_int", exBaseKey.GetValue("test_int").ToString());
+                    Console.WriteLine(" {0}: {1}", "test_str", exBaseKey.GetStringValue("test_str"));
 
-                        exBaseKey.DeleteValue("test_str");
-                    }
-
-                    using (var exBaseKey = registryHive.CreateKey(subKeyName2))
-                    {
-                        exBaseKey.SetValue("test_int", 12);
-                        exBaseKey.SetValue("test_str", "test");
-
-                        Console.WriteLine(subKeyName2);
-                        Console.WriteLine(" {0}: {1}", "test_int", exBaseKey.GetValue("test_int").ToString());
-                        Console.WriteLine(" {0}: {1}", "test_str", exBaseKey.GetStringValue("test_str").ToString());
-                    }
-
-                    using (var exBaseKey = registryHive.CreateKey(hivename))
-                    {
-                        exBaseKey.DeleteKey("test_value2");
-                    }
+                    exBaseKey.DeleteValue("test_str");
                 }
-                finally
+
+                using (var exBaseKey = registryHive.CreateKey(subKeyName2))
                 {
-                    registryHive.Dispose();
+                    exBaseKey.SetValue("test_int", 12);
+                    exBaseKey.SetValue("test_str", "test");
+
+                    Console.WriteLine(subKeyName2);
+                    Console.WriteLine(" {0}: {1}", "test_int", exBaseKey.GetValue("test_int").ToString());
+                    Console.WriteLine(" {0}: {1}", "test_str", exBaseKey.GetStringValue("test_str"));
+                }
+
+                using (var exBaseKey = registryHive.CreateKey(hiveName))
+                {
+                    exBaseKey.DeleteKey("test_value2");
                 }
             }
 
