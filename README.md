@@ -1,7 +1,9 @@
 ExRegistryHive
 ====
 
-Overview
+**This is a program has not been updated in a long time.  
+Please check the source code and run it at your own risk if you use it.  
+Also you will not be able to operate Hive if you exit the program before releasing it. In that case, please use regedit.exe to unload it.**  
 
 ## Description
 This project is that it load RegistryHive with C#.
